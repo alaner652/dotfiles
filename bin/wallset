@@ -1,0 +1,28 @@
+#!/bin/bash
+
+WALLDIR="$HOME/Pictures/Wallpapers"
+THEME="$HOME/.config/rofi/launchers/type-2/style-2.rasi"
+CURRENT_WP="$HOME/.config/hypr/current_wallpaper"
+
+selected=$(
+    for img in "$WALLDIR"/*; do
+        name=$(basename "$img")
+        echo -en "${name}\0icon\x1f${img}\n"
+    done | rofi -dmenu -show-icons -theme "$THEME" -p "Themes"
+)
+
+[ -z "$selected" ] && exit 0
+chosen="$WALLDIR/$selected"
+
+# 切換桌布
+awww img "$chosen" --transition-type any --transition-duration 2 
+
+# 套用 matugen 顏色
+matugen image "$chosen"
+
+# 更新 current_wallpaper 圖片本體
+mkdir -p "$(dirname "$CURRENT_WP")"
+cp "$chosen" "$CURRENT_WP"
+
+# 通知
+notify-send "Theme Updated" "已切換到桌布：$(basename "$chosen")" --icon="$chosen"
