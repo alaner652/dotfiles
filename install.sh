@@ -8,7 +8,7 @@ echo "==> Installing dotfiles from ${DOTFILES_DIR}"
 
 # ------------------------------- Helpers ----------------------------------
 # Minimal base via pacman (for building yay itself)
-BASE_PACMAN_PKGS=(base-devel git)
+BASE_PACMAN_PKGS=(base-devel git zsh)
 
 # Everything else (official + AUR) handled by yay
 YAY_PKGS=(
@@ -18,6 +18,7 @@ YAY_PKGS=(
   wl-clipboard grim slurp
   libnotify xdg-user-dirs
   fcitx5 fcitx5-im fcitx5-rime fcitx5-configtool fcitx5-chinese-addons
+  oh-my-zsh
   hyprshot
   matugen-bin
   awww            # wallpaper daemon/cli used by wallset + hypr autostart
@@ -89,6 +90,18 @@ copy_bin() {
   echo "   bin scripts copied to ~/.local/bin"
 }
 
+maybe_logout() {
+  echo "==> Logging out in 5 seconds to apply shell/env (Ctrl+C to cancel)..."
+  sleep 5
+  if command -v loginctl >/dev/null 2>&1; then
+    if [ -n "${XDG_SESSION_ID:-}" ]; then
+      loginctl terminate-session "$XDG_SESSION_ID" || true
+      return
+    fi
+    loginctl terminate-user "$USER" || true
+  fi
+}
+
 # ------------------------------- Run --------------------------------------
 install_base_pacman
 ensure_yay
@@ -96,5 +109,6 @@ install_with_yay
 copy_configs
 copy_pictures
 copy_bin
+maybe_logout
 
-echo "✅ Done. Remember to ensure ~/.local/bin is in PATH."
+echo "Done. Remember to ensure ~/.local/bin is in PATH."
