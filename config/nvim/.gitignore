@@ -1,0 +1,41 @@
+# Neovim Configuration .gitignore
+
+# Lazy.nvim plugin lockfile
+lazy-lock.json
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Vim/Neovim temporary and backup files
+*.swp
+*.swo
+*.swn
+*~
+*.un~
+.netrwhist
+
+# Lazy.nvim auto-generated plugin directory
+plugin/
+
+# LSP and debug logs
+lsp.log
+*.log
+
+# Local test files
+test.lua
+scratch.lua
+
+# Editor settings
+.vscode/
+.idea/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backup files
+*.backup
+*.bak
