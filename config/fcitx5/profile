@@ -1,0 +1,7 @@
+[Profile]
+Name=Default
+DefaultIM=chewing
+PrevIM=keyboard-us
+IMList=keyboard-us;chewing;rime
+Layout=us
+ConfigVersion=4

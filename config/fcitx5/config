@@ -1,0 +1,13 @@
+[Hotkey]
+# 切換輸入法
+TriggerKeys=Control+space
+# 下一個輸入法（可選）
+EnumerateForwardKeys=Super+space
+# 上一個輸入法（可選）
+EnumerateBackwardKeys=Control+Shift+space
+
+[Behavior]
+ShareInputState=No
+
+[Hotkey/EnumerateSkipFirst]
+Enabled=True

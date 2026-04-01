@@ -17,7 +17,7 @@ YAY_PKGS=(
   fastfetch neovim ripgrep fd
   wl-clipboard grim slurp
   libnotify xdg-user-dirs
-  fcitx5 fcitx5-im fcitx5-rime fcitx5-configtool fcitx5-chinese-addons
+  fcitx5 fcitx5-im fcitx5-rime fcitx5-chewing fcitx5-configtool fcitx5-chinese-addons
   oh-my-zsh
   hyprshot
   matugen-bin
@@ -90,15 +90,21 @@ copy_bin() {
   echo "   bin scripts copied to ~/.local/bin"
 }
 
-maybe_logout() {
+auto_logout() {
+  [ -n "${NO_AUTO_LOGOUT:-}" ] && { echo "Skip auto-logout (NO_AUTO_LOGOUT set)"; return; }
   echo "==> Logging out in 5 seconds to apply shell/env (Ctrl+C to cancel)..."
   sleep 5
-  if command -v loginctl >/dev/null 2>&1; then
-    if [ -n "${XDG_SESSION_ID:-}" ]; then
-      loginctl terminate-session "$XDG_SESSION_ID" || true
-      return
-    fi
-    loginctl terminate-user "$USER" || true
+  if command -v hyprctl >/dev/null 2>&1; then
+    hyprctl dispatch exit || true
+    return
+  fi
+  if command -v loginctl >/dev/null 2>&1 && [ -n "${XDG_SESSION_ID:-}" ]; then
+    loginctl terminate-session "$XDG_SESSION_ID" || true
+    return
+  fi
+  # Fallback: log out via pkill of session leader shell (best-effort)
+  if [ -n "${SSH_TTY:-}" ]; then
+    pkill -KILL -t "$(ps -o tty= -p "$$" | tr -d ' ')" || true
   fi
 }
 
@@ -109,6 +115,6 @@ install_with_yay
 copy_configs
 copy_pictures
 copy_bin
-maybe_logout
+auto_logout
 
-echo "Done. Remember to ensure ~/.local/bin is in PATH."
+echo "Done. (Set NO_AUTO_LOGOUT=1 to skip logout when rerunning.)"
