@@ -10,6 +10,7 @@ if [[ -r ~/.cache/p10k-instant-prompt-${TTY##*/}.zsh ]]; then
 fi
 
 export ZSH="$HOME/.oh-my-zsh"
+export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
 export LANG=zh_TW.UTF-8
 export LC_ALL=zh_TW.UTF-8
 
@@ -23,7 +24,7 @@ plugins=(
 )
 
 source $ZSH/oh-my-zsh.sh
-source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+source "$ZSH_CUSTOM/themes/powerlevel10k/powerlevel10k.zsh-theme"
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 

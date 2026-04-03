@@ -13,11 +13,11 @@ BASE_PACMAN_PKGS=(base-devel git zsh)
 YAY_PKGS=(
   curl unzip
   hyprland hyprlock waybar kitty wlogout swaync rofi-wayland
+  thunar brightnessctl playerctl
   fastfetch neovim ripgrep fd
   wl-clipboard grim slurp
   libnotify xdg-user-dirs
   fcitx5 fcitx5-im fcitx5-rime fcitx5-chewing fcitx5-configtool fcitx5-chinese-addons
-  oh-my-zsh-git
   hyprshot
   matugen-bin
   awww
@@ -50,56 +50,50 @@ install_with_yay() {
   done
 }
 
+install_oh_my_zsh() {
+  echo "==> 4. Installing oh-my-zsh..."
+  if [ ! -d "$HOME/.oh-my-zsh/.git" ]; then
+    rm -rf "$HOME/.oh-my-zsh"
+    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
+  fi
+}
+
 install_zsh_plugins() {
-  echo "==> 4. Setting up Zsh plugins & Powerlevel10k..."
+  echo "==> 5. Installing Zsh plugins & Powerlevel10k..."
   local custom_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-  
-  # Powerlevel10k
-  [ -d "$custom_dir/themes/powerlevel10k" ] || \
+
+  mkdir -p "$custom_dir/themes" "$custom_dir/plugins"
+
+  [ -d "$custom_dir/themes/powerlevel10k/.git" ] || \
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$custom_dir/themes/powerlevel10k"
-  
-  # Plugins
-  [ -d "$custom_dir/plugins/zsh-syntax-highlighting" ] || \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$custom_dir/plugins/zsh-syntax-highlighting"
-  [ -d "$custom_dir/plugins/zsh-autosuggestions" ] || \
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$custom_dir/plugins/zsh-autosuggestions"
+
+  [ -d "$custom_dir/plugins/zsh-syntax-highlighting/.git" ] || \
+    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$custom_dir/plugins/zsh-syntax-highlighting"
+
+  [ -d "$custom_dir/plugins/zsh-autosuggestions/.git" ] || \
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "$custom_dir/plugins/zsh-autosuggestions"
 }
 
 setup_zsh_configs() {
-  echo "==> 5. Syncing Zsh configurations (Smart Symlink)..."
+  echo "==> 6. Copying Zsh configs..."
   local src_dir="$DOTFILES_DIR/zsh"
-  local files=(".zshrc" ".p10k.zsh")
-  mkdir -p "$src_dir"
+  [ -d "$src_dir" ] || return 0
 
-  for file in "${files[@]}"; do
-    local src="$src_dir/$file"
-    local dst="$HOME/$file"
-
-    if [ -f "$src" ]; then
-      echo "   [Deploy] Linking $file -> $HOME"
-      # 安全備份：如果是實體檔案則重新命名
-      [ -f "$dst" ] && [ ! -L "$dst" ] && mv "$dst" "${dst}.bak"
-      ln -sf "$src" "$dst"
-    elif [ -f "$dst" ]; then
-      echo "   [Init] Moving $file to dotfiles and linking back"
-      mv "$dst" "$src"
-      ln -sf "$src" "$dst"
-    else
-      echo "   [Create] Creating template $file"
-      touch "$src"
-      ln -sf "$src" "$dst"
+  for file in .zshrc .p10k.zsh; do
+    if [ -f "$src_dir/$file" ]; then
+      cp -a "$src_dir/$file" "$HOME/$file"
+      echo "   $file copied"
     fi
   done
 
-  # 切換預設 Shell
-  if [[ "${SHELL##*/}" != "zsh" ]]; then
+  if [ "${SHELL##*/}" != "zsh" ]; then
     echo "==> Changing default shell to zsh..."
-    chsh -s "$(which zsh)"
+    chsh -s "$(command -v zsh)"
   fi
 }
 
 copy_configs() {
-  echo "==> 6. Deploying .config directories..."
+  echo "==> 7. Deploying .config directories..."
   local src="$DOTFILES_DIR/config"
   local dst="$HOME/.config"
   [ -d "$src" ] || return 0
@@ -114,7 +108,7 @@ copy_configs() {
 }
 
 copy_pictures() {
-  echo "==> 7. Syncing Pictures..."
+  echo "==> 8. Syncing Pictures..."
   local src="$DOTFILES_DIR/Pictures"
   local dst="$HOME/Pictures"
   [ -d "$src" ] || return 0
@@ -123,7 +117,7 @@ copy_pictures() {
 }
 
 copy_bin() {
-  echo "==> 8. Installing scripts to ~/.local/bin..."
+  echo "==> 9. Installing scripts to ~/.local/bin..."
   local src="$DOTFILES_DIR/bin"
   local dst="$HOME/.local/bin"
   [ -d "$src" ] || return 0
@@ -136,13 +130,19 @@ auto_logout() {
   [ -n "${NO_AUTO_LOGOUT:-}" ] && return
   echo "==> Done! Logging out in 5s to apply changes (Ctrl+C to cancel)..."
   sleep 5
-  hyprctl dispatch exit || loginctl terminate-session "$XDG_SESSION_ID" || true
+  if command -v hyprctl >/dev/null 2>&1; then
+    hyprctl dispatch exit && return
+  fi
+  if command -v loginctl >/dev/null 2>&1 && [ -n "${XDG_SESSION_ID:-}" ]; then
+    loginctl terminate-session "$XDG_SESSION_ID" || true
+  fi
 }
 
 # ------------------------------- Execute ----------------------------------
 install_base_pacman
 ensure_yay
 install_with_yay
+install_oh_my_zsh
 install_zsh_plugins
 setup_zsh_configs
 copy_configs
