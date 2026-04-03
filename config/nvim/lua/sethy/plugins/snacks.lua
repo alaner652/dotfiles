@@ -130,16 +130,22 @@ return {
             dashboard = {
                 enabled = true,
                 sections = {
-                    { section = "header" },
-                    { section = "keys", gap = 1, padding = 5 },
+                    {
+                        pane = 1,
+                        section = "terminal",
+                        cmd = "printf '\\n%.0s' {1..5}",
+                        height = 5,
+                    },
+                    { section = "header"},
+                    { section = "keys", gap = 1, padding = 1 },
                     { section = "startup" },
                     {
                         section = "terminal",
                         cmd = "ascii-image-converter ~/Pictures/mortis.png -C -c -W 50",
-                        height = 50,
+                        random = 15,
                         pane = 2,
-                        indent = 5
-                    },                
+                        height = 50,
+                    },
                 },
             },
         },
@@ -151,9 +157,9 @@ return {
             { "<leader>dB", function() require("snacks").bufdelete() end, desc = "Delete or Close Buffer  (Confirm)" },
 
             -- Snacks Picker
-            { "<leader>pf", function() require("snacks").picker.files() end, desc = "Find Files (Snacks Picker)" },
-            { "<leader>pc", function() require("snacks").picker.files({ cwd = "~/dotfiles/nvim/.config/nvim/lua" }) end, desc = "Find Config File" },
-            { "<leader>ps", function() require("snacks").picker.grep() end, desc = "Grep word" },
+            -- { "<leader>pf", function() require("snacks").picker.files() end, desc = "Find Files (Snacks Picker)" },
+            -- { "<leader>pc", function() require("snacks").picker.files({ cwd = "~/dotfiles/nvim/.config/nvim/lua" }) end, desc = "Find Config File" },
+            -- { "<leader>ps", function() require("snacks").picker.grep() end, desc = "Grep word" },
             { "<leader>pws", function() require("snacks").picker.grep_word() end, desc = "Search Visual selection or Word", mode = { "n", "x" } },
             { "<leader>pk", function() require("snacks").picker.keymaps({ layout = "ivy" }) end, desc = "Search Keymaps (Snacks Picker)" },
 

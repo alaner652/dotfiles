@@ -1,3 +1,3 @@
-require("root.core")
-require("root.lazy")
+require("sethy.core")
+require("sethy.lazy")
 require("current-theme")
