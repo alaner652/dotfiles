@@ -7,6 +7,9 @@ CONFIG_DST="$HOME/small-R/dotfiles/config"
 BIN_SRC="$HOME/.local/bin"
 BIN_DST="$HOME/small-R/dotfiles/bin"
 
+LOCAL_SHARE_SRC="$HOME/.local/share"
+LOCAL_SHARE_DST="$HOME/small-R/dotfiles/local-share"
+
 echo "==> Syncing configs..."
 
 mkdir -p "$CONFIG_DST"
@@ -19,6 +22,7 @@ CONFIGS=(
   swaync
   fastfetch
   nvim
+  fcitx5
 )
 
 for dir in "${CONFIGS[@]}"; do
@@ -35,6 +39,15 @@ for dir in "${CONFIGS[@]}"; do
       "$CONFIG_SRC/$dir/" "$CONFIG_DST/$dir/"
   fi
 done
+
+echo "==> Syncing fcitx5 user data..."
+
+mkdir -p "$LOCAL_SHARE_DST"
+
+rsync -av \
+  --delete \
+  --exclude '*.cache' \
+  "$LOCAL_SHARE_SRC/fcitx5/" "$LOCAL_SHARE_DST/fcitx5/" 2>/dev/null || true
 
 echo "==> Syncing bin..."
 

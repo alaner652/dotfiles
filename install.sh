@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-# Dotfiles deployer for small-R (Austin)
-# Target: Arch Linux + Hyprland + Zsh (p10k)
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "==> Starting dotfiles deployment from ${DOTFILES_DIR}"
 
 # ------------------------------- Configuration ----------------------------
+
 BASE_PACMAN_PKGS=(base-devel git zsh)
 
 YAY_PKGS=(
@@ -22,13 +21,15 @@ YAY_PKGS=(
   matugen-bin
   awww
   ttf-jetbrains-mono-nerd
+  noto-fonts-cjk
+  adobe-source-han-sans-tw-fonts
   ascii-image-converter-git
 )
 
 # ------------------------------- Functions --------------------------------
 
 install_base_pacman() {
-  echo "==> 1. Installing base build deps..."
+  echo "==> 1. Installing base packages..."
   for pkg in "${BASE_PACMAN_PKGS[@]}"; do
     sudo pacman -S --needed --noconfirm "$pkg"
   done
@@ -36,8 +37,7 @@ install_base_pacman() {
 
 ensure_yay() {
   if ! command -v yay >/dev/null 2>&1; then
-    echo "==> 2. Installing yay (AUR helper)..."
-    local tmpdir
+    echo "==> 2. Installing yay..."
     tmpdir="$(mktemp -d)"
     git clone https://aur.archlinux.org/yay-bin.git "$tmpdir/yay-bin"
     (cd "$tmpdir/yay-bin" && makepkg -si --noconfirm)
@@ -45,9 +45,12 @@ ensure_yay() {
 }
 
 install_with_yay() {
-  echo "==> 3. Installing packages via yay..."
+  echo "==> 3. Installing packages..."
   for pkg in "${YAY_PKGS[@]}"; do
-    yay -S --needed --noconfirm "$pkg"
+    yay -S --needed --noconfirm \
+      --answerdiff None \
+      --answerclean None \
+      "$pkg"
   done
 }
 
@@ -60,86 +63,107 @@ install_oh_my_zsh() {
 }
 
 install_zsh_plugins() {
-  echo "==> 5. Installing Zsh plugins & Powerlevel10k..."
-  local custom_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+  echo "==> 5. Installing zsh plugins..."
+  custom_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
   mkdir -p "$custom_dir/themes" "$custom_dir/plugins"
 
-  [ -d "$custom_dir/themes/powerlevel10k/.git" ] || \
+  [ -d "$custom_dir/themes/powerlevel10k" ] || \
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$custom_dir/themes/powerlevel10k"
 
-  [ -d "$custom_dir/plugins/zsh-syntax-highlighting/.git" ] || \
+  [ -d "$custom_dir/plugins/zsh-syntax-highlighting" ] || \
     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$custom_dir/plugins/zsh-syntax-highlighting"
 
-  [ -d "$custom_dir/plugins/zsh-autosuggestions/.git" ] || \
+  [ -d "$custom_dir/plugins/zsh-autosuggestions" ] || \
     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "$custom_dir/plugins/zsh-autosuggestions"
 }
 
 setup_zsh_configs() {
-  echo "==> 6. Copying Zsh configs..."
-  local src_dir="$DOTFILES_DIR/zsh"
-  [ -d "$src_dir" ] || return 0
+  echo "==> 6. Copying zsh configs..."
+  src="$DOTFILES_DIR/zsh"
+  [ -d "$src" ] || return 0
 
   for file in .zshrc .p10k.zsh; do
-    if [ -f "$src_dir/$file" ]; then
-      cp -a "$src_dir/$file" "$HOME/$file"
-      echo "   $file copied"
-    fi
+    [ -f "$src/$file" ] && cp -a "$src/$file" "$HOME/$file"
   done
 
   if [ "${SHELL##*/}" != "zsh" ]; then
-    echo "==> Changing default shell to zsh..."
     chsh -s "$(command -v zsh)"
   fi
 }
 
 copy_configs() {
-  echo "==> 7. Deploying .config directories..."
-  local src="$DOTFILES_DIR/config"
-  local dst="$HOME/.config"
+  echo "==> 7. Syncing .config..."
+  src="$DOTFILES_DIR/config"
+  dst="$HOME/.config"
   [ -d "$src" ] || return 0
+
   mkdir -p "$dst"
-  for item in "$src"/*; do
-    [ -e "$item" ] || continue
-    local name="$(basename "$item")"
-    rm -rf "$dst/$name"
-    cp -a "$item" "$dst/$name"
-    echo "   .config/$name copied"
-  done
+
+  rsync -av \
+    --delete \
+    --exclude 'waybar/colors.css' \
+    --exclude 'hypr/colors.conf' \
+    --exclude 'kitty/colors.conf' \
+    --exclude 'swaync/colors/' \
+    "$src/" "$dst/"
+}
+
+copy_local_share() {
+  echo "==> 8. Syncing local-share..."
+  src="$DOTFILES_DIR/local-share"
+  dst="$HOME/.local/share"
+  [ -d "$src" ] || return 0
+
+  mkdir -p "$dst"
+
+  rsync -av "$src/" "$dst/"
 }
 
 copy_pictures() {
-  echo "==> 8. Syncing Pictures..."
-  local src="$DOTFILES_DIR/Pictures"
-  local dst="$HOME/Pictures"
+  echo "==> 9. Syncing Pictures..."
+  src="$DOTFILES_DIR/Pictures"
+  dst="$HOME/Pictures"
   [ -d "$src" ] || return 0
+
   rm -rf "$dst"
   cp -a "$src" "$dst"
 }
 
 copy_bin() {
-  echo "==> 9. Installing scripts to ~/.local/bin..."
-  local src="$DOTFILES_DIR/bin"
-  local dst="$HOME/.local/bin"
+  echo "==> 10. Syncing bin..."
+  src="$DOTFILES_DIR/bin"
+  dst="$HOME/.local/bin"
   [ -d "$src" ] || return 0
+
   mkdir -p "$dst"
-  cp -a "$src"/. "$dst"/
+
+  rsync -av --delete "$src/" "$dst/"
   chmod +x "$dst"/* 2>/dev/null || true
+}
+
+reload_services() {
+  echo "==> Reloading services..."
+  command -v fcitx5-remote >/dev/null && fcitx5-remote -r || true
 }
 
 auto_logout() {
   [ -n "${NO_AUTO_LOGOUT:-}" ] && return
-  echo "==> Done! Logging out in 5s to apply changes (Ctrl+C to cancel)..."
+
+  echo "==> Logging out in 5s..."
   sleep 5
+
   if command -v hyprctl >/dev/null 2>&1; then
     hyprctl dispatch exit && return
   fi
+
   if command -v loginctl >/dev/null 2>&1 && [ -n "${XDG_SESSION_ID:-}" ]; then
     loginctl terminate-session "$XDG_SESSION_ID" || true
   fi
 }
 
 # ------------------------------- Execute ----------------------------------
+
 install_base_pacman
 ensure_yay
 install_with_yay
@@ -147,8 +171,10 @@ install_oh_my_zsh
 install_zsh_plugins
 setup_zsh_configs
 copy_configs
+copy_local_share
 copy_pictures
 copy_bin
+reload_services
 auto_logout
 
 echo "Installation complete."
