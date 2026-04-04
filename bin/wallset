@@ -14,15 +14,25 @@ selected=$(
 [ -z "$selected" ] && exit 0
 chosen="$WALLDIR/$selected"
 
-# 切換桌布
-awww img "$chosen" --transition-type any --transition-duration 2 
+awww img "$chosen" --transition-type any --transition-duration 1.5 
 
-# 套用 matugen 顏色
-matugen image "$chosen"
+expect <<EOF
+spawn matugen image --config $HOME/.config/matugen/config.toml $chosen
+expect {
+    "Select the color" {
+        sleep 0.4 
+        send "\r"
+    }
+}
+expect eof
+EOF
 
-# 更新 current_wallpaper 圖片本體
+killall -q waybar
+waybar >/dev/null 2>&1 &
+pgrep kitty > /dev/null && pkill -SIGUSR1 kitty
+
 mkdir -p "$(dirname "$CURRENT_WP")"
 cp "$chosen" "$CURRENT_WP"
 
-# 通知
-notify-send "Theme Updated" "已切換到桌布：$(basename "$chosen")" --icon="$chosen"
+notify-send "Theme Updated" "已切換到：$(basename "$chosen")" --icon="$chosen"
+
