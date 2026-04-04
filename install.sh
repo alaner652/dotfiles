@@ -22,6 +22,7 @@ YAY_PKGS=(
   matugen-bin
   awww
   ttf-jetbrains-mono-nerd
+  ascii-image-converter-git
 )
 
 # ------------------------------- Functions --------------------------------
