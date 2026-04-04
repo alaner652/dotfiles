@@ -35,6 +35,11 @@ install_base_pacman() {
   done
 }
 
+update_system() {
+  echo "==> Updating package database..."
+  sudo pacman -Syyu --noconfirm
+}
+
 ensure_yay() {
   if ! command -v yay >/dev/null 2>&1; then
     echo "==> 2. Installing yay..."
@@ -165,6 +170,7 @@ auto_logout() {
 # ------------------------------- Execute ----------------------------------
 
 install_base_pacman
+update_system
 ensure_yay
 install_with_yay
 install_oh_my_zsh
