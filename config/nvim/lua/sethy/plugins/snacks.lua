@@ -143,7 +143,6 @@ return {
                         section = "terminal",
                         cmd = "ascii-image-converter ~/Pictures/mortis.png -C -c -W 50",
                         random = 15,
-                        indent = 10,
                         pane = 2,
                         height = 50,
                     },
