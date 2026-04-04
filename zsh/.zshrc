@@ -11,8 +11,8 @@ fi
 
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
-export LANG=zh_TW.UTF-8
-export LC_ALL=zh_TW.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # PATH
 export PATH="$HOME/.local/bin:$PATH"
