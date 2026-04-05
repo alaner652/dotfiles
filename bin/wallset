@@ -2,7 +2,9 @@
 
 WALLDIR="$HOME/Pictures/Wallpapers"
 THEME="$HOME/.config/rofi/launchers/type-2/style-2.rasi"
+
 CURRENT_WP="$HOME/.config/hypr/current_wallpaper"
+CURRENT_WP_PATH="$HOME/.config/hypr/current_wallpaper_path"
 
 selected=$(
     for img in "$WALLDIR"/*; do
@@ -14,25 +16,34 @@ selected=$(
 [ -z "$selected" ] && exit 0
 chosen="$WALLDIR/$selected"
 
-awww img "$chosen" --transition-type any --transition-duration 1.5 
+if [ -f "$CURRENT_WP_PATH" ]; then
+    current_saved=$(cat "$CURRENT_WP_PATH")
+
+    if [ "$current_saved" = "$chosen" ]; then
+        notify-send "Theme Unchanged" "這張已經在用了：$(basename "$chosen")" --icon="$chosen"
+        exit 0
+    fi
+fi
+
+awww img "$chosen" --transition-type any --transition-duration 1
 
 expect <<EOF
 spawn matugen image --config $HOME/.config/matugen/config.toml $chosen
 expect {
     "Select the color" {
-        sleep 0.4 
         send "\r"
     }
 }
 expect eof
 EOF
 
-killall -q waybar
-waybar >/dev/null 2>&1 &
-pgrep kitty > /dev/null && pkill -SIGUSR1 kitty
-
 mkdir -p "$(dirname "$CURRENT_WP")"
 cp "$chosen" "$CURRENT_WP"
 
-notify-send "Theme Updated" "已切換到：$(basename "$chosen")" --icon="$chosen"
+echo "$chosen" > "$CURRENT_WP_PATH"
 
+killall waybar 
+waybar &
+pkill -SIGUSR1 kitty
+
+notify-send "Theme Updated" "已切換到：$(basename "$chosen")" --icon="$chosen"
