@@ -35,6 +35,7 @@ YAY_PKGS=(
   cmatrix
   tty-clock
   btop
+  obs-studio
 )
 
 # ------------------------------- Functions --------------------------------
