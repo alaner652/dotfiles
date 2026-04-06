@@ -24,6 +24,12 @@ YAY_PKGS=(
   noto-fonts-cjk
   adobe-source-han-sans-tw-fonts
   ascii-image-converter-git
+  zsh
+  rsync
+  expect
+  nodejs
+  npm
+  gnome-keyring
 )
 
 # ------------------------------- Functions --------------------------------

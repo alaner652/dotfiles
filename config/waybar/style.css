@@ -39,7 +39,7 @@ window#waybar {
 }
 
 #clock,
-#battery,
+#custom-battery,
 #pulseaudio,
 #window,
 #network,
@@ -82,7 +82,7 @@ window#waybar {
   color: #d7ccff;
 }
 
-#battery {
+#custom-battery {
   color: #b9f4d3;
 }
 
@@ -91,7 +91,7 @@ window#waybar {
 }
 
 #clock:hover,
-#battery:hover,
+#custom-battery:hover,
 #pulseaudio:hover,
 #network:hover,
 #window:hover,

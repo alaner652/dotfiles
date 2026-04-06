@@ -2,13 +2,13 @@
 set -euo pipefail
 
 CONFIG_SRC="$HOME/.config"
-CONFIG_DST="$HOME/small-R/dotfiles/config"
+CONFIG_DST="$HOME/dotfiles/config"
 
 BIN_SRC="$HOME/.local/bin"
-BIN_DST="$HOME/small-R/dotfiles/bin"
+BIN_DST="$HOME/dotfiles/bin"
 
 LOCAL_SHARE_SRC="$HOME/.local/share"
-LOCAL_SHARE_DST="$HOME/small-R/dotfiles/local-share"
+LOCAL_SHARE_DST="$HOME/dotfiles/local-share"
 
 echo "==> Syncing configs..."
 
