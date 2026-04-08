@@ -100,12 +100,22 @@ setup_zsh_configs() {
   src="$DOTFILES_DIR/zsh"
   [ -d "$src" ] || return 0
 
-  for file in .zshrc .p10k.zsh; do
-    [ -f "$src/$file" ] && cp -a "$src/$file" "$HOME/$file"
-  done
+  rsync -av "$src/" "$HOME/"
 
-  if [ "${SHELL##*/}" != "zsh" ]; then
-    chsh -s "$(command -v zsh)"
+  if [ ! -f "$HOME/.p10k.zsh" ]; then
+    echo "==> Note: ~/.p10k.zsh not found. Run 'p10k configure' after login if needed."
+  fi
+
+  target_shell="$(command -v zsh)"
+  current_login_shell="$(getent passwd "$USER" | cut -d: -f7 || true)"
+
+  if [ "$current_login_shell" != "$target_shell" ]; then
+    echo "==> Switching login shell to $target_shell"
+    if chsh -s "$target_shell"; then
+      echo "==> Login shell updated. Re-login required."
+    else
+      echo "==> Warning: failed to run chsh. Set it manually: chsh -s $target_shell"
+    fi
   fi
 }
 
@@ -164,6 +174,38 @@ reload_services() {
   command -v fcitx5-remote >/dev/null && fcitx5-remote -r || true
 }
 
+verify_zsh_setup() {
+  echo "==> Verifying zsh/p10k setup..."
+  target_shell="$(command -v zsh)"
+  current_login_shell="$(getent passwd "$USER" | cut -d: -f7 || true)"
+
+  if [ "$current_login_shell" = "$target_shell" ]; then
+    echo "==> OK: login shell is $target_shell"
+  else
+    echo "==> Warning: login shell is $current_login_shell (expected $target_shell)"
+  fi
+
+  if [ -f "$HOME/.zshrc" ]; then
+    echo "==> OK: ~/.zshrc exists"
+  else
+    echo "==> Warning: ~/.zshrc is missing"
+  fi
+
+  if [ -f "$HOME/.p10k.zsh" ]; then
+    echo "==> OK: ~/.p10k.zsh exists"
+  else
+    echo "==> Warning: ~/.p10k.zsh is missing. Run 'p10k configure' after login."
+  fi
+
+  if [ -f "$HOME/.zshrc" ] && rg -q 'source .*powerlevel10k|\.p10k\.zsh' "$HOME/.zshrc"; then
+    echo "==> OK: ~/.zshrc contains p10k loading logic"
+  else
+    echo "==> Warning: ~/.zshrc does not appear to load p10k"
+  fi
+
+  echo "==> Re-login is required for login shell changes to take effect."
+}
+
 auto_logout() {
   [ -n "${NO_AUTO_LOGOUT:-}" ] && return
 
@@ -193,6 +235,7 @@ copy_local_share
 copy_pictures
 copy_bin
 reload_services
+verify_zsh_setup
 auto_logout
 
 echo "Installation complete."

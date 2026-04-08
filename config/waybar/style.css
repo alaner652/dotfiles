@@ -3,7 +3,7 @@
 * {
   border: none;
   border-radius: 0;
-  font-family: "JetBrains Mono Nerd Font", "SF Pro Display", sans-serif;
+  font-family: "JetBrains Mono Nerd Font", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif;
   font-size: 1.1rem;
 }
 
@@ -18,6 +18,7 @@ window#waybar {
   padding: 0;
 }
 
+/* --- 工作區按鈕基礎樣式 --- */
 #workspaces button {
   background-color: @primary;
   color: #121212;
@@ -25,11 +26,21 @@ window#waybar {
   margin: 20px 6px;
   border: none;
   border-radius: 18px;
-
   transition: background-color 0.25s ease, color 0.25s ease,
     padding 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s ease;
 }
 
+/* --- 移除 Workspace Hover 效果 --- */
+/* 將 hover 數值設為與基礎狀態完全相同，且不使用可能噴錯的語法 */
+#workspaces button:hover {
+  background: @primary;
+  color: #121212;
+  padding: 6px 25px;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+/* --- 當前工作區 (Active) 樣式 --- */
 #workspaces button.active,
 #workspaces button.focused {
   background-color: #3f4759;
@@ -38,6 +49,15 @@ window#waybar {
   border-radius: 24px;
 }
 
+/* 確保 Active 狀態下懸停也不會變色 */
+#workspaces button.active:hover {
+  background-color: #3f4759;
+  color: white;
+  padding: 6px 30px;
+  border-radius: 24px;
+}
+
+/* --- 其他模組樣式 --- */
 #clock,
 #custom-battery,
 #pulseaudio,
@@ -52,44 +72,21 @@ window#waybar {
   margin: 20px 4px;
   border: none;
   border-radius: 18px;
-
   background-color: #3f4759;
   transition: background-color 0.25s ease, color 0.25s ease,
     padding 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s ease;
 }
 
-#clock {
-  color: #ffd3da;
-}
+#clock { color: #ffd3da; }
+#window { color: #ffcfa1; }
+#pulseaudio { color: #f7f3a6; }
+#network { color: #c6e7ff; }
+#cpu { color: #c9f2d4; }
+#memory { color: #d7ccff; }
+#custom-battery { color: #b9f4d3; }
+#custom-power { color: #5294e2; }
 
-#window {
-  color: #ffcfa1;
-}
-
-#pulseaudio {
-  color: #f7f3a6;
-}
-
-#network {
-  color: #c6e7ff;
-}
-
-#cpu {
-  color: #c9f2d4;
-}
-
-#memory {
-  color: #d7ccff;
-}
-
-#custom-battery {
-  color: #b9f4d3;
-}
-
-#custom-power {
-  color: #5294e2;
-}
-
+/* 其他模組保留 Hover 效果 */
 #clock:hover,
 #custom-battery:hover,
 #pulseaudio:hover,
